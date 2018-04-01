@@ -14,6 +14,7 @@ var (
 	dnsServers       = kingpin.Arg("dns servers", "DNS Servers to ping").Default("127.0.0.1", "8.8.8.8").Strings()
 	sleepTimeout     = kingpin.Flag("wait-request", "Time to wait between requests in milliseconds").Default("100").Uint()
 	antiCache        = kingpin.Flag("anti-cache", "Prepend randomized subdomains to query to prevent some caching. THIS REQUIRES A WILDCARD DNS ENTRY!").Default("false").Bool()
+	errorTolerance   = kingpin.Flag("error-tolerance", "Number of errors that may occur per server before the test is aborted").Short('z').Default("80").Int()
 )
 
 func main() {
@@ -28,6 +29,7 @@ func main() {
 			fmt.Printf("Error: %s\n", err)
 			return
 		}
+		bar.Show()
 		fmt.Printf("\n"+
 			"\tP00.5  = % 6.3fms\n"+
 			"\tP05.0  = % 6.3fms\n"+

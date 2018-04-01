@@ -40,20 +40,23 @@ func bench(dnsServer, target string, measurements uint16, cb ProgressCallback) (
 		DNSSECSupport: false,
 	}
 
-	fmt.Println("Checking DNSSEC...")
+	fmt.Print("Checking DNSSEC...")
 	// verify DNSSEC
 	m := new(dns.Msg)
 	m.SetEdns0(4096, true) // Set DNSSEC OK
 	m.SetQuestion("www.dnssec-failed.org.", dns.TypeA)
 	r, _, err := c.Exchange(m, dnsServer)
 	if err != nil {
+		fmt.Println("FAIL")
 		return nil, errors.Wrap(err, "Could not check DNSSEC")
 	}
 	if r.Rcode == dns.RcodeServerFailure {
 		result.DNSSECSupport = true
 	}
+	fmt.Println("OK")
 
-	errTolerance := 80
+	fmt.Println("Running benchmark...")
+	errTolerance := *errorTolerance
 	// execute measurements
 	var ttls = make([]time.Duration, 0)
 	for i := measurements; i > 0; i-- {
@@ -70,7 +73,7 @@ func bench(dnsServer, target string, measurements uint16, cb ProgressCallback) (
 			if errTolerance <= 0 {
 				return nil, errors.Wrap(err, "Bench Question failed")
 			}
-			fmt.Printf("Error (tolerance=%d): %s\n", errTolerance, err)
+			fmt.Printf("\nError (tolerance=%d): %s\n", errTolerance, err)
 			errTolerance--
 			ttl = time.Second
 		} else {
@@ -80,6 +83,7 @@ func bench(dnsServer, target string, measurements uint16, cb ProgressCallback) (
 		}
 		ttls = append(ttls, ttl)
 	}
+	cb(measurements, measurements)
 
 	sort.Slice(ttls, func(i, j int) bool {
 		return ttls[i].Nanoseconds() < ttls[j].Nanoseconds()
