@@ -53,6 +53,7 @@ func bench(dnsServer, target string, measurements uint16, cb ProgressCallback) (
 		result.DNSSECSupport = true
 	}
 
+	errTolerance := 80
 	// execute measurements
 	var ttls = make([]time.Duration, 0)
 	for i := measurements; i > 0; i-- {
@@ -66,10 +67,16 @@ func bench(dnsServer, target string, measurements uint16, cb ProgressCallback) (
 		}
 		r, ttl, err := c.Exchange(q, dnsServer)
 		if err != nil {
-			return nil, errors.Wrap(err, "Bench Question failed")
-		}
-		if len(r.Answer) != 1 {
-			return nil, errors.New("DNS has no response Answers")
+			if errTolerance <= 0 {
+				return nil, errors.Wrap(err, "Bench Question failed")
+			}
+			fmt.Printf("Error (tolerance=%d): %s\n", errTolerance, err)
+			errTolerance--
+			ttl = time.Second
+		} else {
+			if len(r.Answer) != 1 {
+				return nil, errors.New("DNS has no response Answers")
+			}
 		}
 		ttls = append(ttls, ttl)
 	}
