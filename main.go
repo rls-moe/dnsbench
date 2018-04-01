@@ -26,7 +26,7 @@ func main() {
 			bar.Set(int(i))
 		})
 		if err != nil {
-			fmt.Printf("Error: %s\n", err)
+			fmt.Printf("\nError: %s\n", err)
 			return
 		}
 		bar.Show()
