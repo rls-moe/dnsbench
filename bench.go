@@ -75,8 +75,7 @@ func bench(dnsServer, target string, measurements uint16, cb ProgressCallback) (
 	}
 
 	sort.Slice(ttls, func(i, j int) bool {
-		// sort worst first
-		return ttls[i].Nanoseconds() > ttls[j].Nanoseconds()
+		return ttls[i].Nanoseconds() < ttls[j].Nanoseconds()
 	})
 
 	var avg int64
@@ -99,7 +98,7 @@ func bench(dnsServer, target string, measurements uint16, cb ProgressCallback) (
 }
 
 func Px(sl []time.Duration, p float64) time.Duration {
-	var res int64
+	var res int64 = 0
 	numR := int64(
 		math.Min(
 			math.Ceil(p*float64(len(sl))),
@@ -107,8 +106,9 @@ func Px(sl []time.Duration, p float64) time.Duration {
 		),
 	)
 	for i := int64(0); i < numR && i < int64(len(sl)); i++ {
-		res += sl[i].Nanoseconds()
+		if res < sl[i].Nanoseconds() {
+			res = sl[i].Nanoseconds()
+		}
 	}
-	res /= numR
 	return time.Duration(res) * time.Nanosecond
 }
